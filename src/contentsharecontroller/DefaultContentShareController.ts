@@ -11,6 +11,7 @@ import MeetingSessionCredentials from '../meetingsession/MeetingSessionCredentia
 import MeetingSessionStatus from '../meetingsession/MeetingSessionStatus';
 import DefaultModality from '../modality/DefaultModality';
 import AsyncScheduler from '../scheduler/AsyncScheduler';
+import VideoCodecCapability from '../sdp/VideoCodecCapability';
 import { Maybe } from '../utils/Types';
 import VideoTile from '../videotile/VideoTile';
 import ContentShareConstants from './ContentShareConstants';
@@ -94,6 +95,10 @@ export default class DefaultContentShareController
         Maybe.of(observer.contentShareDidUnpause).map(f => f.call(observer));
       });
     }
+  }
+
+  setContentShareVideoCodecPreferences(preferences: VideoCodecCapability[]): void {
+    this.contentAudioVideo.setVideoCodecSendPreferences(preferences);
   }
 
   async destroy(): Promise<void> {

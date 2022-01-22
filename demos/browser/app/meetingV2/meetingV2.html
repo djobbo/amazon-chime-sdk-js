@@ -97,13 +97,21 @@ aria-labelledby="additional-options-modal-label" aria-hidden="true">
     <div class="modal-body">
       <fieldset>
         <div class="custom-control" style="text-align: left;">
-          <label for="logLevel">Choose a Log Level:</label>
+          <label for="logLevel">Log Level:</label>
           <select name="logLevel" class="form-select" id="logLevelSelect">
             <option value="INFO">INFO</option>
             <option value="DEBUG">DEBUG</option>
             <option value="WARN">WARN</option>
             <option value="ERROR">ERROR</option>
             <option value="OFF">OFF</option>
+          </select>
+        </div>
+        <div class="custom-control">
+          <label for="videoCodec">Preferred Video Send Codec:</label>
+          <select name="videoCodec" id="videoCodecSelect">
+              <option value="default">Meeting Default</option>
+              <option value="vp8">VP8</option>
+              <option value="h264ConstrainedBaselineProfile">H.264 Constrained Baseline Profile</option>
           </select>
         </div>
         <div class="form-check" style="text-align: left;">

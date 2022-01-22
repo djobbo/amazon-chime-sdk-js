@@ -3,6 +3,7 @@
 
 import AudioProfile from '../audioprofile/AudioProfile';
 import ContentShareObserver from '../contentshareobserver/ContentShareObserver';
+import VideoCodecCapability from '../sdp/VideoCodecCapability';
 
 export default interface ContentShareControllerFacade {
   /**
@@ -46,4 +47,12 @@ export default interface ContentShareControllerFacade {
    * Remove an observer
    */
   removeContentShareObserver(observer: ContentShareObserver): void;
+
+  /**
+   * Set codec preferences for this content send stream. See `AudioVideoControllerFacade.setVideoCodecSendPreferences`
+   * for more information.
+   *
+   * @param Array of [[VideoCodecCapability]].
+   */
+  setContentShareVideoCodecPreferences?(preferences: VideoCodecCapability[]): void;
 }
