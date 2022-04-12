@@ -48,6 +48,7 @@ import {
   NoOpEventReporter,
   NoOpVideoFrameProcessor,
   RemovableAnalyserNode,
+  ServerSideNetworkAdaption,
   SimulcastLayers,
   Transcript,
   TranscriptEvent,
@@ -546,7 +547,6 @@ export class DemoMeetingApp
     if (!this.defaultBrowserBehavior.hasChromiumWebRTC()) {
       (document.getElementById('simulcast') as HTMLInputElement).disabled = true;
     }
-
     if (!this.defaultBrowserBehavior.supportDownlinkBandwidthEstimation()) {
       (document.getElementById('priority-downlink-policy') as HTMLInputElement).disabled = true;
     }
@@ -561,17 +561,31 @@ export class DemoMeetingApp
       const priorityBasedDownlinkPolicyConfig = document.getElementById(
         'priority-downlink-policy-preset'
       ) as HTMLSelectElement;
+      const priorityBasedDownlinkPolicyConfigTitle = document.getElementById(
+        'priority-downlink-policy-preset-title'
+      ) as HTMLElement;
       const enablePaginationCheckbox = document.getElementById(
         'enable-pagination-checkbox'
       ) as HTMLSelectElement;
-
+      const serverSideNetworkAdaption = document.getElementById(
+        'server-side-network-adaption'
+      ) as HTMLSelectElement;
+      const serverSideNetworkAdaptionTitle = document.getElementById(
+        'server-side-network-adaption-title'
+      ) as HTMLElement;
 
       if (this.usePriorityBasedDownlinkPolicy) {
+        priorityBasedDownlinkPolicyConfigTitle.style.display = 'block';
         priorityBasedDownlinkPolicyConfig.style.display = 'block';
         enablePaginationCheckbox.style.display = 'block';
+        serverSideNetworkAdaption.style.display = 'block';
+        serverSideNetworkAdaptionTitle.style.display = 'block';
       } else {
+        priorityBasedDownlinkPolicyConfigTitle.style.display = 'none';
         priorityBasedDownlinkPolicyConfig.style.display = 'none';
         enablePaginationCheckbox.style.display = 'none';
+        serverSideNetworkAdaption.style.display = 'none';
+        serverSideNetworkAdaptionTitle.style.display = 'none';
       }
     });
 
@@ -611,11 +625,11 @@ export class DemoMeetingApp
       this.meeting = (document.getElementById('inputMeeting') as HTMLInputElement).value;
       this.name = (document.getElementById('inputName') as HTMLInputElement).value;
       this.region = (document.getElementById('inputRegion') as HTMLInputElement).value;
-      this.enableSimulcast = (document.getElementById('simulcast') as HTMLInputElement).checked;
+      this.enableSimulcast = true;
       this.enableEventReporting = (document.getElementById('event-reporting') as HTMLInputElement).checked;
       this.deleteOwnAttendeeToLeave = (document.getElementById('delete-attendee') as HTMLInputElement).checked;
       this.enableWebAudio = (document.getElementById('webaudio') as HTMLInputElement).checked;
-      this.usePriorityBasedDownlinkPolicy = (document.getElementById('priority-downlink-policy') as HTMLInputElement).checked;
+      this.usePriorityBasedDownlinkPolicy = true;
       this.echoReductionCapability = (document.getElementById('echo-reduction-capability') as HTMLInputElement).checked;
       this.primaryExternalMeetingId = (document.getElementById('primary-meeting-external-id') as HTMLInputElement).value;
 
@@ -1797,6 +1811,7 @@ export class DemoMeetingApp
     }
     configuration.enableSimulcastForUnifiedPlanChromiumBasedBrowsers = this.enableSimulcast;
     if (this.usePriorityBasedDownlinkPolicy) {
+      this.videoPriorityBasedPolicyConfig.serverSideNetworkAdaption = ServerSideNetworkAdaption.EnableBandwidthProbing;
       this.priorityBasedDownlinkPolicy = new VideoPriorityBasedPolicy(this.meetingLogger, this.videoPriorityBasedPolicyConfig);
       configuration.videoDownlinkBandwidthPolicy = this.priorityBasedDownlinkPolicy;
       this.priorityBasedDownlinkPolicy.addObserver(this);
