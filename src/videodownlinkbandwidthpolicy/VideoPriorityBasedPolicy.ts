@@ -14,6 +14,7 @@ import VideoStreamIndex from '../videostreamindex/VideoStreamIndex';
 import DefaultVideoTile from '../videotile/DefaultVideoTile';
 import VideoTile from '../videotile/VideoTile';
 import VideoTileController from '../videotilecontroller/VideoTileController';
+import ServerSideNetworkAdaption from './ServerSideNetworkAdaption';
 import TargetDisplaySize from './TargetDisplaySize';
 import VideoDownlinkBandwidthPolicy from './VideoDownlinkBandwidthPolicy';
 import VideoDownlinkObserver from './VideoDownlinkObserver';
@@ -331,10 +332,11 @@ export default class VideoPriorityBasedPolicy implements VideoDownlinkBandwidthP
       remoteInfos,
       chosenStreams
     );
-
+    
+    const skipProbe = this.videoPriorityBasedPolicyConfig.serverSideNetworkAdaption !== ServerSideNetworkAdaption.None;
     let subscriptionChoice = UseReceiveSet.NewOptimal;
     // Look for probing or override opportunities
-    if (!this.startupPeriod && sameStreamChoices) {
+    if (!skipProbe && !this.startupPeriod && sameStreamChoices) {
       if (this.rateProbeState === RateProbeState.Probing) {
         subscriptionChoice = this.handleProbe(chosenStreams, rates.targetDownlinkBitrate);
       } else if (rates.deltaToNextUpgrade !== 0) {
@@ -1029,7 +1031,21 @@ export default class VideoPriorityBasedPolicy implements VideoDownlinkBandwidthP
     return logString;
   }
 
-  private getCurrentVideoPreferences(): VideoPreferences {
+  protected getCurrentVideoPreferences(): VideoPreferences {
     return this.videoPreferences || this.defaultVideoPreferences;
+  }
+
+  wantsServerSideNetworkAdaption(): ServerSideNetworkAdaption {
+    return this.videoPriorityBasedPolicyConfig.serverSideNetworkAdaption;
+  }
+
+  getVideoPreferences(): VideoPreferences {
+    let preferences = this.getCurrentVideoPreferences();
+    if (!preferences) {
+      const dummyPreferences = VideoPreferences.prepare();
+      // Can't be undefined
+      preferences = dummyPreferences.build();
+    }
+    return preferences;
   }
 }

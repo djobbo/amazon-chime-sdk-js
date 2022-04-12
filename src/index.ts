@@ -224,6 +224,7 @@ import SDPMediaSection from './sdp/SDPMediaSection';
 import Scheduler from './scheduler/Scheduler';
 import SendAndReceiveDataMessagesTask from './task/SendAndReceiveDataMessagesTask';
 import SerialGroupTask from './task/SerialGroupTask';
+import ServerSideNetworkAdaption from './videodownlinkbandwidthpolicy/ServerSideNetworkAdaption';
 import SessionStateController from './sessionstatecontroller/SessionStateController';
 import SessionStateControllerAction from './sessionstatecontroller/SessionStateControllerAction';
 import SessionStateControllerDeferPriority from './sessionstatecontroller/SessionStateControllerDeferPriority';
@@ -553,6 +554,7 @@ export {
   Scheduler,
   SendAndReceiveDataMessagesTask,
   SerialGroupTask,
+  ServerSideNetworkAdaption,
   SessionStateController,
   SessionStateControllerAction,
   SessionStateControllerDeferPriority,

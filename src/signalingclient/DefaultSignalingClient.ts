@@ -107,6 +107,7 @@ export default class DefaultSignalingClient implements SignalingClient {
     joinFrame.clientDetails = SdkClientDetails.create(sdkClientDetails);
     joinFrame.audioSessionId = this.audioSessionId;
     joinFrame.wantsCompressedSdp = DefaultSignalingClient.CLIENT_SUPPORTS_COMPRESSION;
+    joinFrame.wantsServerSideNetworkProbingOnReceiveSideEstimator = settings.wantsServerSideNetworkProbingOnReceiveSideEstimator;
 
     const message = SdkSignalFrame.create();
     message.type = SdkSignalFrame.Type.JOIN;
@@ -152,6 +153,12 @@ export default class DefaultSignalingClient implements SignalingClient {
         subscribeFrame.sendStreams.push(streamDescription.toStreamDescriptor());
       }
     }
+
+    if (settings.videoSubscriptionConfiguration.length > 0) {
+      subscribeFrame.videoSubscriptionConfiguration = settings.videoSubscriptionConfiguration.map(
+        this.convertVideoSubscriptionConfiguration
+      );
+    }
     const message = SdkSignalFrame.create();
     message.type = SdkSignalFrame.Type.SUBSCRIBE;
     message.sub = subscribeFrame;
@@ -181,6 +188,9 @@ export default class DefaultSignalingClient implements SignalingClient {
     signalConfig.mid = config.mid;
     signalConfig.attendeeId = config.attendeeId;
     signalConfig.streamId = config.streamId;
+    signalConfig.groupId = config.groupId;
+    signalConfig.priority = config.priority;
+    signalConfig.targetBitrateKbps = config.targetBitrateKbps;
     return signalConfig;
   }
 
