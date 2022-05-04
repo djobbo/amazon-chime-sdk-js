@@ -241,6 +241,7 @@ import SignalingClientJoin from './signalingclient/SignalingClientJoin';
 import SignalingClientObserver from './signalingclientobserver/SignalingClientObserver';
 import SignalingClientSubscribe from './signalingclient/SignalingClientSubscribe';
 import SignalingClientVideoSubscriptionConfiguration from './signalingclient/SignalingClientVideoSubscriptionConfiguration';
+import SimulcastContentShareTransceiverController from './transceivercontroller/SimulcastContentShareTransceiverController';
 import SimulcastLayers from './simulcastlayers/SimulcastLayers';
 import SimulcastTransceiverController from './transceivercontroller/SimulcastTransceiverController';
 import SimulcastUplinkObserver from './videouplinkbandwidthpolicy/SimulcastUplinkObserver';
@@ -570,6 +571,7 @@ export {
   SignalingClientObserver,
   SignalingClientSubscribe,
   SignalingClientVideoSubscriptionConfiguration,
+  SimulcastContentShareTransceiverController,
   SimulcastLayers,
   SimulcastTransceiverController,
   SimulcastUplinkObserver,
