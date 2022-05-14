@@ -870,7 +870,7 @@ export default class VideoPriorityBasedPolicy implements VideoDownlinkBandwidthP
                   this.hasSimulcastStreams(remoteInfos, info.attendeeId, info.groupId) &&
                   this.canUpgrade(
                     info.avgBitrateKbps,
-                    info.maxBitrateKbps,
+                    preference.targetSize,
                     preference.targetSizeToBitrateKbps(preference.targetSize),
                     info.attendeeId.endsWith(ContentShareConstants.Modality)
                   )
@@ -927,7 +927,7 @@ export default class VideoPriorityBasedPolicy implements VideoDownlinkBandwidthP
 
   private canUpgrade(
     bitrateKbp: number,
-    maxBitrateKbps: number,
+    targetResolution: TargetDisplaySize,
     targetBitrateKbp: number,
     isContent: boolean
   ): boolean {
@@ -937,7 +937,20 @@ export default class VideoPriorityBasedPolicy implements VideoDownlinkBandwidthP
     // This does not apply to video as video uplink bandwidth could change the max bitrate value without resubscribing
     // so the max bitrate value might not be up-to-date on the downlink side. Also in the case of video, the avg
     // bitrate is close to the actual max bitrate.
-    if (bitrateKbp <= targetBitrateKbp && (!isContent || maxBitrateKbps <= targetBitrateKbp)) {
+    let canUpgrade = false;
+    if (isContent) {
+      // Content simulcast only have 2 layers right now so we always upgrade if the target resolution is high and
+      // skip if the target resolution is low. If the target resolution is medium then fall back to use avg bitrate
+      // as video.
+      if (targetResolution === TargetDisplaySize.High) {
+        canUpgrade = true;
+      } else if (targetResolution === TargetDisplaySize.Medium && bitrateKbp <= targetBitrateKbp) {
+        canUpgrade = true;
+      }
+    } else if (bitrateKbp <= targetBitrateKbp) {
+      canUpgrade = true;
+    }
+    if (canUpgrade) {
       this.logger.info(
         `bwe: canUpgrade: bitrateKbp: ${bitrateKbp} targetBitrateKbp: ${targetBitrateKbp}`
       );

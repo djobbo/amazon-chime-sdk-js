@@ -38,6 +38,7 @@ import MeetingSessionCredentials from '../../src/meetingsession/MeetingSessionCr
 import MeetingSessionStatus from '../../src/meetingsession/MeetingSessionStatus';
 import MeetingSessionStatusCode from '../../src/meetingsession/MeetingSessionStatusCode';
 import MeetingSessionURLs from '../../src/meetingsession/MeetingSessionURLs';
+import DefaultModality from '../../src/modality/DefaultModality';
 import DefaultReconnectController from '../../src/reconnectcontroller/DefaultReconnectController';
 import TimeoutScheduler from '../../src/scheduler/TimeoutScheduler';
 import {
@@ -96,7 +97,7 @@ describe('DefaultAudioVideoController', () => {
   let domMockBehavior: DOMMockBehavior;
   let eventController: EventController;
 
-  const attendeeId = 'foo-attendee';
+  const defaultAttendeeId = 'foo-attendee';
 
   class TestBackoff implements Backoff {
     reset(): void {}
@@ -119,7 +120,7 @@ describe('DefaultAudioVideoController', () => {
     configuration.urls.turnControlURL = 'https://turncontrol.test.example.com';
     configuration.urls.signalingURL = 'https://signaling.test.example.com';
     configuration.credentials = new MeetingSessionCredentials();
-    configuration.credentials.attendeeId = attendeeId;
+    configuration.credentials.attendeeId = defaultAttendeeId;
     configuration.credentials.joinToken = 'foo-join-token';
     configuration.attendeePresenceTimeoutMs = 5000;
     return configuration;
@@ -199,7 +200,7 @@ describe('DefaultAudioVideoController', () => {
   }
 
   // For ListenForVolumeIndicatorsTask
-  function makeAudioStreamIdInfoFrame(): Uint8Array {
+  function makeAudioStreamIdInfoFrame(attendeeId: string = defaultAttendeeId): Uint8Array {
     const streamInfo = SdkAudioStreamIdInfo.create();
     streamInfo.audioStreamId = 1;
     streamInfo.attendeeId = attendeeId;
@@ -2230,10 +2231,10 @@ describe('DefaultAudioVideoController', () => {
 
       await audioVideoController.replaceLocalVideo(stream);
       expect(spy.calledTwice).to.be.true;
-      expect(spy.args[0][0]).to.equal(attendeeId);
+      expect(spy.args[0][0]).to.equal(defaultAttendeeId);
       expect(spy.args[0][1]).to.be.true; //local tile param
       expect(spy.args[0][2].id).to.equal('1');
-      expect(spy.args[1][0]).to.equal(attendeeId);
+      expect(spy.args[1][0]).to.equal(defaultAttendeeId);
       expect(spy.args[1][1]).to.be.true; //local tile param
       expect(spy.args[1][2].id).to.equal('2');
       await stop();
@@ -3045,7 +3046,7 @@ describe('DefaultAudioVideoController', () => {
   });
 
   describe('when simulcast is enabled', () => {
-    it('will be automatically switched off if platform is not Chrome', () => {
+    it('will be automatically switched off if platform is not Chrome', async () => {
       configuration.enableSimulcastForUnifiedPlanChromiumBasedBrowsers = true;
       audioVideoController = new DefaultAudioVideoController(
         configuration,
@@ -3054,19 +3055,10 @@ describe('DefaultAudioVideoController', () => {
         new NoOpDeviceController(),
         reconnectController
       );
+      await start();
       // @ts-ignore
       expect(audioVideoController.enableSimulcast).to.equal(false);
-      domMockBehavior.browserName = 'chrome';
-      domMockBuilder = new DOMMockBuilder(domMockBehavior);
-      audioVideoController = new DefaultAudioVideoController(
-        configuration,
-        new NoOpDebugLogger(),
-        webSocketAdapter,
-        new NoOpDeviceController(),
-        reconnectController
-      );
-      // @ts-ignore
-      expect(audioVideoController.enableSimulcast).to.equal(true);
+      await stop();
     });
 
     it('can be started', async () => {
@@ -3080,8 +3072,6 @@ describe('DefaultAudioVideoController', () => {
         new NoOpDeviceController(),
         reconnectController
       );
-      // @ts-ignore
-      expect(audioVideoController.enableSimulcast).to.equal(true);
 
       let sessionStarted = false;
       let sessionConnecting = false;
@@ -3120,6 +3110,8 @@ describe('DefaultAudioVideoController', () => {
 
       expect(sessionStarted).to.be.true;
       expect(sessionConnecting).to.be.true;
+      // @ts-ignore
+      expect(audioVideoController.enableSimulcast).to.equal(true);
 
       const tileId = audioVideoController.videoTileController.startLocalVideoTile();
       expect(tileId).to.equal(1);
@@ -3127,6 +3119,48 @@ describe('DefaultAudioVideoController', () => {
       audioVideoController.videoTileController.stopLocalVideoTile();
       await sendICEEventAndSubscribeAckFrame();
 
+      await stop();
+      audioVideoController.removeObserver(observer);
+    });
+
+    it('can be started for content share attendee', async () => {
+      const attendeeId = defaultAttendeeId + DefaultModality.MODALITY_CONTENT;
+      configuration.credentials.attendeeId = attendeeId;
+      configuration.enableSimulcastForUnifiedPlanChromiumBasedBrowsers = true;
+      domMockBehavior.browserName = 'chrome';
+      domMockBuilder = new DOMMockBuilder(domMockBehavior);
+      audioVideoController = new DefaultAudioVideoController(
+        configuration,
+        new NoOpDebugLogger(),
+        webSocketAdapter,
+        new NoOpDeviceController(),
+        reconnectController
+      );
+      let sessionStarted = false;
+      let sessionConnecting = false;
+      class TestObserver implements AudioVideoObserver {
+        audioVideoDidStart(): void {
+          sessionStarted = true;
+        }
+        audioVideoDidStartConnecting(): void {
+          sessionConnecting = true;
+        }
+      }
+      const observer = new TestObserver();
+      audioVideoController.addObserver(observer);
+      expect(audioVideoController.configuration).to.equal(configuration);
+      expect(audioVideoController.rtcPeerConnection).to.be.null;
+      await start();
+      webSocketAdapter.send(makeJoinAckFrame());
+      await delay(defaultDelay);
+      webSocketAdapter.send(makeIndexFrame());
+      webSocketAdapter.send(makeAudioStreamIdInfoFrame(attendeeId));
+      webSocketAdapter.send(makeAudioMetadataFrame());
+      await delay(defaultDelay);
+      expect(sessionStarted).to.be.true;
+      expect(sessionConnecting).to.be.true;
+      // @ts-ignore
+      expect(audioVideoController.enableSimulcast).to.equal(true);
       await stop();
       audioVideoController.removeObserver(observer);
     });

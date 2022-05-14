@@ -58,13 +58,14 @@ export default class DefaultContentShareController
     enable: boolean,
     encodingParams?: ContentShareSimulcastEncodingParameters
   ): void {
-    this.contentAudioVideo.configuration.enableSimulcastForUnifiedPlanChromiumBasedBrowsers = true;
     if (enable) {
+      this.contentAudioVideo.configuration.enableSimulcastForUnifiedPlanChromiumBasedBrowsers = true;
       this.contentAudioVideo.configuration.videoUplinkBandwidthPolicy = new DefaultSimulcastUplinkPolicyForContentShare(
         this.contentAudioVideo.logger,
         encodingParams
       );
     } else {
+      this.contentAudioVideo.configuration.enableSimulcastForUnifiedPlanChromiumBasedBrowsers = false;
       this.contentAudioVideo.configuration.videoUplinkBandwidthPolicy = undefined;
     }
   }

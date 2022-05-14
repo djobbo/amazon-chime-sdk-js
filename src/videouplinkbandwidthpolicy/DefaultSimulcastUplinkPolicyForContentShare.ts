@@ -53,11 +53,7 @@ export default class DefaultSimulcastUplinkPolicyForContentShare implements Simu
       maxBitrate: (this.encodingParams?.high?.maxBitrateKbps || 1200) * toBps,
       maxFramerate: this.encodingParams?.high?.maxFramerate,
     });
-    this.logger.info(
-      `simulcast: policy:chooseEncodingParameters newQualityMap: ${this.getQualityMapString(
-        newMap
-      )}`
-    );
+    this.getQualityMapString(newMap);
     return newMap;
   }
 
@@ -68,8 +64,8 @@ export default class DefaultSimulcastUplinkPolicyForContentShare implements Simu
   wantsResubscribe(): boolean {
     let constraintDiff = false;
 
-    this.nextLocalDescriptions = this.videoIndex.localStreamDescriptions();
-    for (let i = 0; i < this.nextLocalDescriptions.length; i++) {
+    this.nextLocalDescriptions = this.videoIndex?.localStreamDescriptions();
+    for (let i = 0; i < this.nextLocalDescriptions?.length; i++) {
       const streamId = this.nextLocalDescriptions[i].streamId;
       if (streamId !== 0 && !!streamId) {
         const prevIndex = this.currLocalDescriptions.findIndex(val => {
@@ -107,18 +103,20 @@ export default class DefaultSimulcastUplinkPolicyForContentShare implements Simu
     // should deprecate in this policy
   }
 
-  private getQualityMapString(params: Map<string, RTCRtpEncodingParameters>): string {
+  private getQualityMapString(params: Map<string, RTCRtpEncodingParameters>): void {
     let qualityString = '';
-    const localDescriptions = this.videoIndex.localStreamDescriptions();
-    if (localDescriptions.length > 0) {
+    const localDescriptions = this.videoIndex?.localStreamDescriptions();
+    if (localDescriptions?.length > 0) {
       params.forEach((value: RTCRtpEncodingParameters) => {
         let disabledByWebRTC = false;
         if (value.rid === 'low') disabledByWebRTC = localDescriptions[0].disabledByWebRTC;
         else disabledByWebRTC = localDescriptions[1].disabledByWebRTC;
         qualityString += `{ rid: ${value.rid} active:${value.active} disabledByWebRTC: ${disabledByWebRTC} maxBitrate:${value.maxBitrate} scaleResolutionDownBy:${value.scaleResolutionDownBy} maxFrameRate:${value.maxFramerate}`;
       });
+      this.logger.info(
+        `simulcast: content policy:chooseEncodingParameters newQualityMap: ${qualityString}`
+      );
     }
-    return qualityString;
   }
 
   addObserver(_observer: SimulcastUplinkObserver): void {}

@@ -300,7 +300,6 @@ export class DemoMeetingApp
   enableWebAudio = false;
   logLevel = LogLevel.INFO;
   enableSimulcast = false;
-  enableSimulcastForContentShare = false;
   usePriorityBasedDownlinkPolicy = false;
   videoPriorityBasedPolicyConfig = VideoPriorityBasedPolicyConfig.Default;
   enablePin = false;
@@ -545,7 +544,7 @@ export class DemoMeetingApp
   initEventListeners(): void {
     if (!this.defaultBrowserBehavior.hasChromiumWebRTC()) {
       (document.getElementById('simulcast') as HTMLInputElement).disabled = true;
-      (document.getElementById('simulcast-content-share') as HTMLInputElement).disabled = true;
+      (document.getElementById('content-simulcast-config')).style.display = 'none';
     }
 
     if (!this.defaultBrowserBehavior.supportDownlinkBandwidthEstimation()) {
@@ -613,7 +612,6 @@ export class DemoMeetingApp
       this.name = (document.getElementById('inputName') as HTMLInputElement).value;
       this.region = (document.getElementById('inputRegion') as HTMLInputElement).value;
       this.enableSimulcast = (document.getElementById('simulcast') as HTMLInputElement).checked;
-      this.enableSimulcastForContentShare = (document.getElementById('simulcast-content-share') as HTMLInputElement).checked;
       this.enableEventReporting = (document.getElementById('event-reporting') as HTMLInputElement).checked;
       this.deleteOwnAttendeeToLeave = (document.getElementById('delete-attendee') as HTMLInputElement).checked;
       this.enableWebAudio = (document.getElementById('webaudio') as HTMLInputElement).checked;
@@ -1807,10 +1805,6 @@ export class DemoMeetingApp
       this.deviceController,
       new DefaultEventController(configuration, this.meetingLogger, this.eventReporter)
     );
-
-    if (this.enableSimulcastForContentShare) {
-      this.meetingSession.audioVideo.enableSimulcastForContentShare(true);
-    }
 
     if ((document.getElementById('fullband-speech-mono-quality') as HTMLInputElement).checked) {
       this.meetingSession.audioVideo.setAudioProfile(AudioProfile.fullbandSpeechMono());
@@ -3302,7 +3296,12 @@ export class DemoMeetingApp
   }
 
   private initContentShareDropDownItems(): void {
-    let item = document.getElementById('dropdown-item-content-share-screen-capture');
+    let item = document.getElementById('dropdown-item-content-share-configuration');
+    item.addEventListener('click', () => {
+      document.getElementById(`content-simulcast-modal`).style.display = 'block';
+    });
+
+    item = document.getElementById('dropdown-item-content-share-screen-capture');
     item.addEventListener('click', () => {
       this.contentShareType = ContentShareType.ScreenCapture;
       this.contentShareStart();
@@ -3353,6 +3352,37 @@ export class DemoMeetingApp
     document.getElementById('dropdown-item-content-share-stop').addEventListener('click', () => {
       this.contentShareStop();
     });
+
+    document.getElementById('button-content-share-modal-close').addEventListener('click', () => {
+      document.getElementById('content-simulcast-modal').style.display = 'none';
+    });
+
+    document.getElementById('button-save-content-share-configs').addEventListener('click', () => {
+      document.getElementById('content-simulcast-modal').style.display = 'none';
+      const enableSimulcastForContentShare = (document.getElementById('content-enable-simulcast') as HTMLInputElement).checked;
+      if (enableSimulcastForContentShare) {
+        const lowMaxBitratesKbps = parseInt((document.getElementById('content-simulcast-low-max-bitratekbps') as HTMLInputElement).value) || undefined;
+        const lowScaleFactor = parseInt((document.getElementById('content-simulcast-low-scale-factor') as HTMLInputElement).value) || undefined;
+        const lowMaxFramerate = parseInt((document.getElementById('content-simulcast-low-max-framerate') as HTMLInputElement).value) || undefined;
+        const highMaxBitratesKbps = parseInt((document.getElementById('content-simulcast-high-max-bitratekbps') as HTMLInputElement).value) || undefined;
+        const highScaleFactor = parseInt((document.getElementById('content-simulcast-high-scale-factor') as HTMLInputElement).value) || undefined;
+        const highMaxFramerate = parseInt((document.getElementById('content-simulcast-high-max-framerate') as HTMLInputElement).value) || undefined;
+        this.audioVideo.enableSimulcastForContentShare(true, {
+          low: {
+            maxBitrateKbps: lowMaxBitratesKbps,
+            scaleResolutionDownBy: lowScaleFactor,
+            maxFramerate: lowMaxFramerate
+          },
+          high: {
+            maxBitrateKbps: highMaxBitratesKbps,
+            scaleResolutionDownBy: highScaleFactor,
+            maxFramerate: highMaxFramerate
+          }
+        })
+      } else {
+        this.audioVideo.enableSimulcastForContentShare(false);
+      }
+    });
   }
 
   private async playToStream(videoFile: HTMLVideoElement): Promise<MediaStream> {
@@ -3371,7 +3401,8 @@ export class DemoMeetingApp
     switch (this.contentShareType) {
       case ContentShareType.ScreenCapture: {
         try {
-          await this.audioVideo.startContentShareFromScreenCapture();
+          const framerate = (document.getElementById('content-capture-frame-rate') as HTMLInputElement).value;
+          await this.audioVideo.startContentShareFromScreenCapture(undefined, parseInt(framerate, 10) || undefined);
         } catch (e) {
           this.meetingLogger?.error(`Could not start content share: ${e}`);
           return;
