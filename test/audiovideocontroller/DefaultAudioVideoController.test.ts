@@ -25,6 +25,7 @@ import DefaultAudioVideoController from '../../src/audiovideocontroller/DefaultA
 import AudioVideoObserver from '../../src/audiovideoobserver/AudioVideoObserver';
 import Backoff from '../../src/backoff/Backoff';
 import ConnectionHealthPolicyConfiguration from '../../src/connectionhealthpolicy/ConnectionHealthPolicyConfiguration';
+import ContentShareConstants from '../../src/contentsharecontroller/ContentShareConstants';
 import NoOpDeviceController from '../../src/devicecontroller/NoOpDeviceController';
 import DefaultEventController from '../../src/eventcontroller/DefaultEventController';
 import EventAttributes from '../../src/eventcontroller/EventAttributes';
@@ -38,7 +39,6 @@ import MeetingSessionCredentials from '../../src/meetingsession/MeetingSessionCr
 import MeetingSessionStatus from '../../src/meetingsession/MeetingSessionStatus';
 import MeetingSessionStatusCode from '../../src/meetingsession/MeetingSessionStatusCode';
 import MeetingSessionURLs from '../../src/meetingsession/MeetingSessionURLs';
-import DefaultModality from '../../src/modality/DefaultModality';
 import DefaultReconnectController from '../../src/reconnectcontroller/DefaultReconnectController';
 import TimeoutScheduler from '../../src/scheduler/TimeoutScheduler';
 import {
@@ -70,6 +70,7 @@ import DefaultWebSocketAdapter from '../../src/websocketadapter/DefaultWebSocket
 import DOMMockBehavior from '../dommock/DOMMockBehavior';
 import DOMMockBuilder from '../dommock/DOMMockBuilder';
 import ChromeSDPMock from '../sdp/ChromeSDPMock';
+
 
 const defaultDelay = new DOMMockBehavior().asyncWaitMs * 5;
 
@@ -3124,7 +3125,7 @@ describe('DefaultAudioVideoController', () => {
     });
 
     it('can be started for content share attendee', async () => {
-      const attendeeId = defaultAttendeeId + DefaultModality.MODALITY_CONTENT;
+      const attendeeId = defaultAttendeeId + ContentShareConstants.Modality;
       configuration.credentials.attendeeId = attendeeId;
       configuration.enableSimulcastForUnifiedPlanChromiumBasedBrowsers = true;
       domMockBehavior.browserName = 'chrome';
@@ -3361,8 +3362,6 @@ describe('DefaultAudioVideoController', () => {
         new NoOpDeviceController(),
         reconnectController
       );
-      // @ts-ignore
-      expect(audioVideoController.enableSimulcast).to.equal(true);
       let event = 0;
       let observed = 0;
       class TestObserver implements AudioVideoObserver {

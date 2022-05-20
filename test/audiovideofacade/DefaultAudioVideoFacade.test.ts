@@ -21,7 +21,7 @@ import MeetingSessionStatus from '../../src/meetingsession/MeetingSessionStatus'
 import MeetingSessionStatusCode from '../../src/meetingsession/MeetingSessionStatusCode';
 import type VolumeIndicatorCallback from '../../src/realtimecontroller/VolumeIndicatorCallback';
 import DefaultVideoTransformDevice from '../../src/videoframeprocessor/DefaultVideoTransformDevice';
-import VideoEncodingParameters from '../../src/videouplinkbandwidthpolicy/VideoEncodingParameters';
+import ContentShareSimulcastEncodingParameters from '../../src/videouplinkbandwidthpolicy/ContentShareSimulcastEncodingParameters';
 import DOMMockBuilder from '../dommock/DOMMockBuilder';
 
 describe('DefaultAudioVideoFacade', () => {
@@ -40,8 +40,7 @@ describe('DefaultAudioVideoFacade', () => {
   class NoOpContentShareController implements ContentShareController {
     enableSimulcastForContentShare(
       _enable: boolean,
-      _lowLayerEncodingParams?: VideoEncodingParameters,
-      _highLayerEncodingParams?: VideoEncodingParameters
+      _encodingParams?: ContentShareSimulcastEncodingParameters
     ): void {}
 
     async startContentShare(_stream: MediaStream): Promise<void> {}

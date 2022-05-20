@@ -14,9 +14,9 @@ export default interface ContentShareControllerFacade {
   setContentAudioProfile(audioProfile: AudioProfile): void;
 
   /**
-   * Enable/disable simulcast for content share. This should be called before calling `startContentShare` or
+   * Toggle simulcast for content share. This should be called before calling `startContentShare` or
    * `startContentShareFromScreenCapture`. The default encoding parameters are:
-   * -  High layer: 1200 kbps max bitrate
+   * - High layer: 1200 kbps max bitrate
    * - Low layer: 300 kbps max bitrate, scale down resolution by 2, and 5 fps max frame rate.
    * @param enable Enable/disable simulcast
    * @param encodingParams Overide the default encoding params for either layer in max bitrate, scale resolution

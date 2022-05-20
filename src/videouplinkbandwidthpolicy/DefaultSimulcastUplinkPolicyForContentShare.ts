@@ -12,7 +12,7 @@ import SimulcastUplinkObserver from './SimulcastUplinkObserver';
 import SimulcastUplinkPolicy from './SimulcastUplinkPolicy';
 
 /**
- * [[DefaultSimulcastUplinkPolicyForContentShare]] set the capture and encode
+ * [[DefaultSimulcastUplinkPolicyForContentShare]] sets the capture and encode
  *  parameters based on constructor input parameters
  */
 export default class DefaultSimulcastUplinkPolicyForContentShare implements SimulcastUplinkPolicy {
