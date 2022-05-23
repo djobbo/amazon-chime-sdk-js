@@ -71,7 +71,6 @@ import DOMMockBehavior from '../dommock/DOMMockBehavior';
 import DOMMockBuilder from '../dommock/DOMMockBuilder';
 import ChromeSDPMock from '../sdp/ChromeSDPMock';
 
-
 const defaultDelay = new DOMMockBehavior().asyncWaitMs * 5;
 
 // longjohn makes it possible for us to see async stack traces across timers,
