@@ -24,20 +24,7 @@ const chime = new AWS.Chime({ region: 'us-east-1' });
 chime.endpoint = new AWS.Endpoint(endpoint);
 
 const chimeSDKMeetings = new AWS.ChimeSDKMeetings({ region: currentRegion });
-if(chimeSDKMeetingsEndpoint != 'https://service.chime.aws.amazon.com' && useChimeSDKMeetings === 'true'){
-  chimeSDKMeetings.endpoint = new AWS.Endpoint(chimeSDKMeetingsEndpoint);
-}
-
-// return chime meetings SDK client just for Echo Reduction for now.
-function getClientForMeeting(meeting) {
-  if (useChimeSDKMeetings === 'true') {
-    return chimeSDKMeetings;
-  }
-  if (meeting?.Meeting?.MeetingFeatures?.Audio?.EchoReduction === 'AVAILABLE') {
-    return chimeSDKMeetings;
-  }
-  return chime;
-}
+chimeSDKMeetings.endpoint = new AWS.Endpoint(chimeSDKMeetingsEndpoint);
 
 // Read resource names from the environment
 const {
@@ -63,11 +50,22 @@ exports.join = async (event, context) => {
   if (!query.title || !query.name) {
     return response(400, 'application/json', JSON.stringify({ error: 'Need parameters: title, name' }));
   }
-
+  
+  console.info("Query Tags"+query.tags);
+  let userTags = query.tags.split(",").map((tagString) => {
+    return {
+      "Key": tagString.split(":")[0],
+      "Value": tagString.split(":")[1]
+    }
+  });
+  console.info("User Tags"+userTags);
   // Look up the meeting by its title. If it does not exist, create the meeting.
   let meeting = await getMeeting(query.title);
 
-  let client = getClientForMeeting(meeting);
+  console.info("Endpoint :"+JSON.stringify(chimeSDKMeetings.endpoint));
+  console.info("useChimeSDKMeetings"+JSON.stringify(useChimeSDKMeetings));
+  let client = chimeSDKMeetings;
+
 
   let primaryMeeting = undefined
   if (query.primaryExternalMeetingId) {
@@ -98,6 +96,8 @@ exports.join = async (event, context) => {
       // Any meeting ID you wish to associate with the meeting.
       // For simplicity here, we use the meeting title.
       ExternalMeetingId: query.title.substring(0, 64),
+
+      Tags: userTags
     };
     if (primaryMeeting !== undefined) {
       request.PrimaryMeetingId = primaryMeeting.Meeting.MeetingId;
@@ -154,7 +154,8 @@ exports.join = async (event, context) => {
 exports.end = async (event, context) => {
   // Fetch the meeting by title
   const meeting = await getMeeting(event.queryStringParameters.title);
-  let client = getClientForMeeting(meeting);
+  console.info("Endpoint :"+chimeSDKMeetings.endpoint);
+  let client = chimeSDKMeetings;
 
   // End the meeting. All attendee connections will hang up.
   await client.deleteMeeting({ MeetingId: meeting.Meeting.MeetingId }).promise();
@@ -166,7 +167,8 @@ exports.end = async (event, context) => {
 exports.deleteAttendee = async (event, context) => {
   // Fetch the meeting by title
   const meeting = await getMeeting(event.queryStringParameters.title);
-  let client = getClientForMeeting(meeting);
+  console.info("Endpoint :"+chimeSDKMeetings.endpoint);
+  let client = chimeSDKMeetings;
 
   // End the meeting. All attendee connections will hang up.
   await client.deleteAttendee({
@@ -177,10 +179,89 @@ exports.deleteAttendee = async (event, context) => {
   return response(200, 'application/json', JSON.stringify({}));
 };
 
+//Add Tags to  Meeting Resource
+exports.tagMeeting = async (event,context) => {
+  
+  // Fetch the meeting by title
+  const query = event.queryStringParameters;
+  const meeting = await getMeeting(event.queryStringParameters.title);
+  console.info("Endpoint :"+chimeSDKMeetings.endpoint);
+  let client = chimeSDKMeetings;
+
+  let userTags = query.tags.split(",").map((tagString) => {
+    return {
+      "Key": tagString.split(":")[0],
+      "Value": tagString.split(":")[1]
+    }
+  });
+
+  let request = {
+    ResourceARN: meeting.Meeting.MeetingArn,
+    Tags: userTags
+  };
+
+  console.info('Tag Meeting Request: '+JSON.stringify(request));
+  
+  await client.tagResource(request).promise();
+
+  return response(200, 'application/json', JSON.stringify({}));
+}
+
+//Remove Tags to  Meeting Resource
+exports.untagMeeting = async (event,context) => {
+  
+  // Fetch the meeting by title
+  const query = event.queryStringParameters;
+  const meeting = await getMeeting(event.queryStringParameters.title);
+  console.info("Endpoint :"+chimeSDKMeetings.endpoint);
+  let client = chimeSDKMeetings;
+
+  let tagKeys = query.tagKeys.split(",");
+
+  let request = {
+    ResourceARN: meeting.Meeting.MeetingArn,
+    TagKeys: tagKeys
+  };
+
+  console.info('UnTag Meeting Request: '+JSON.stringify(request));
+  
+  await client.untagResource(request).promise();
+
+  return response(200, 'application/json', JSON.stringify({}));
+}
+
+//List Tags associated to a  Meeting Resource
+exports.listTagsForMeeting = async (event,context) => {
+  
+  // Fetch the meeting by title
+  const meeting = await getMeeting(event.queryStringParameters.title);
+  console.info("Endpoint :"+chimeSDKMeetings.endpoint);
+  let client = chimeSDKMeetings;
+  
+  let request = {
+    ResourceARN: meeting.Meeting.MeetingArn
+  }
+
+  console.info('List Tags For Meeting Request: '+JSON.stringify(request));
+
+  const tags = await client.listTagsForResource(request).promise();
+
+  let stringTag = "";
+  (tags.Tags) && tags.Tags.forEach((tag) => {
+    stringTag = stringTag+tag.Key+": "+tag.Value+" | ";
+  });
+
+  console.info('Tagst: '+stringTag);
+  
+  
+  return response(200, 'application/json', JSON.stringify(stringTag));
+}
+
 exports.start_transcription = async (event, context) => {
   // Fetch the meeting by title
   const meeting = await getMeeting(event.queryStringParameters.title);
-  let client = getClientForMeeting(meeting);
+  console.info("Endpoint :"+chimeSDKMeetings.endpoint);
+  let client = chimeSDKMeetings;
 
   const languageCode = event.queryStringParameters.language;
   const region = event.queryStringParameters.region;
@@ -258,7 +339,8 @@ exports.start_transcription = async (event, context) => {
 exports.stop_transcription = async (event, context) => {
   // Fetch the meeting by title
   const meeting = await getMeeting(event.queryStringParameters.title);
-  let client = getClientForMeeting(meeting);
+  console.info("Endpoint :"+chimeSDKMeetings.endpoint);
+  let client = chimeSDKMeetings;
 
   // stop transcription for the meeting
   await client.stopMeetingTranscription({

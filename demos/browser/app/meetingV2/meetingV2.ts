@@ -259,6 +259,11 @@ export class DemoMeetingApp
   sipURI: string | null = null;
   region: string | null = null;
   primaryExternalMeetingId: string | undefined = undefined;
+  userTags: string = "";
+  meetingARN: string = "";
+  associatedTags: string = "";
+  tagKeys: string = "";
+
   // We cache these so we can avoid having to create new attendees for promotion retries
   // and so the local UX on attendee IDs matches the remote experience
   primaryMeetingSessionCredentials: MeetingSessionCredentials | undefined = undefined;
@@ -609,6 +614,7 @@ export class DemoMeetingApp
       e.preventDefault();
       this.meeting = (document.getElementById('inputMeeting') as HTMLInputElement).value;
       this.name = (document.getElementById('inputName') as HTMLInputElement).value;
+      this.userTags = (document.getElementById('inputTags') as HTMLInputElement).value;
       this.region = (document.getElementById('inputRegion') as HTMLInputElement).value;
       this.enableSimulcast = (document.getElementById('simulcast') as HTMLInputElement).checked;
       this.enableEventReporting = (document.getElementById('event-reporting') as HTMLInputElement).checked;
@@ -792,6 +798,8 @@ export class DemoMeetingApp
                 this.meeting
               )}&name=${encodeURIComponent(DemoMeetingApp.DID)}&region=${encodeURIComponent(
                 region
+              )}&tags=${encodeURIComponent(
+                this.userTags
               )}`,
               {
                 method: 'POST',
@@ -883,6 +891,63 @@ export class DemoMeetingApp
       this.log('audio output device is changed');
       await this.openAudioOutputFromSelection();
     });
+
+    const addTagsToMeeting = async (meeting: string, userTags: string) => {
+      const response = await fetch(`${DemoMeetingApp.BASE_URL}tagMeeting?title=${encodeURIComponent(this.meeting)}&tags=${encodeURIComponent(userTags)}`, {
+        method: 'POST',
+      });
+      const json = await response.json();
+      if (json.error) {
+        throw new Error(`Server error: ${json.error}`);
+      }
+    };
+
+    document.getElementById('btn-tag-resource').addEventListener('click', async e => {
+      e.preventDefault();
+      const userTagsList: string = (document.getElementById('add-tags') as HTMLInputElement).value;
+      (document.getElementById('add-tags') as HTMLInputElement).value = "";
+      await addTagsToMeeting(this.primaryExternalMeetingId, userTagsList);
+    });
+
+
+
+    const removeTagsFromMeeting = async (meeting: string, tagKeys: string) => {
+      const response = await fetch(`${DemoMeetingApp.BASE_URL}untagMeeting?title=${encodeURIComponent(this.meeting)}&tagKeys=${encodeURIComponent(tagKeys)}`, {
+        method: 'POST',
+      });
+      const json = await response.json();
+      if (json.error) {
+        throw new Error(`Server error: ${json.error}`);
+      }
+    };
+
+    document.getElementById('btn-untag-resource').addEventListener('click', async e => {
+      e.preventDefault();
+      const tagKeys: string = (document.getElementById('add-tag-Keys') as HTMLInputElement).value;
+      (document.getElementById('add-tag-Keys') as HTMLInputElement).value = "";
+      await removeTagsFromMeeting(this.primaryExternalMeetingId, tagKeys);
+    });
+
+
+
+    const loadTagsFromMeeting = async (meeting: string) => {
+      const response = await fetch(`${DemoMeetingApp.BASE_URL}listTagsForMeeting?title=${encodeURIComponent(this.meeting)}`, {
+        method: 'GET',
+      });
+      const json = await response.json();
+      if (json.error) {
+        throw new Error(`Server error: ${json.error}`);
+      }
+      return json;
+    };
+
+    document.getElementById('btn-getTags').addEventListener('click', async e => {
+      e.preventDefault();
+      const tags: string = await loadTagsFromMeeting(this.primaryExternalMeetingId);
+      console.log("Get Tags: "+tags);
+      (document.getElementById('chime-meeting-tags') as HTMLInputElement).innerText = tags;
+    });
+
 
     document.getElementById('button-test-sound').addEventListener('click', async e => {
       e.preventDefault();
@@ -2341,7 +2406,9 @@ export class DemoMeetingApp
     primaryExternalMeetingId?: string): Promise<any> {
     let uri = `${DemoMeetingApp.BASE_URL}join?title=${encodeURIComponent(
       meeting
-    )}&name=${encodeURIComponent(name)}&region=${encodeURIComponent(region)}`
+    )}&name=${encodeURIComponent(name)}&region=${encodeURIComponent(region)}&tags=${encodeURIComponent(
+      this.userTags
+    )}`
     if (primaryExternalMeetingId) {
       uri += `&primaryExternalMeetingId=${primaryExternalMeetingId}`;
     }
@@ -3449,6 +3516,7 @@ export class DemoMeetingApp
   async authenticate(): Promise<string> {
     this.joinInfo = (await this.sendJoinRequest(this.meeting, this.name, this.region, this.primaryExternalMeetingId)).JoinInfo;
     this.region = this.joinInfo.Meeting.Meeting.MediaRegion;
+    this.meetingARN = this.joinInfo.Meeting.Meeting.MeetingArn;
     const configuration = new MeetingSessionConfiguration(this.joinInfo.Meeting, this.joinInfo.Attendee);
     await this.initializeMeetingSession(configuration);
     this.primaryExternalMeetingId = this.joinInfo.PrimaryExternalMeetingId

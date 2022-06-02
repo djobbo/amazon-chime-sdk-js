@@ -72,6 +72,8 @@ Resources:
               - 'chime:CreateMeeting'
               - 'chime:TagMeeting'
               - 'chime:TagResource'
+              - 'chime:UntagResource'
+              - 'chime:ListTagsForResource'
               - 'chime:DeleteMeeting'
               - 'chime:GetMeeting'
               - 'chime:ListMeetings'
@@ -95,6 +97,9 @@ Resources:
         - Ref: ChimeSdkStopTranscriptionLambdaRole
         - Ref: ChimeSdkStartCaptureLambdaRole
         - Ref: ChimeSdkEndCaptureLambdaRole
+        - Ref: ChimeSdkTagMeetingLambdaRole
+        - Ref: ChimeSdkUnTagMeetingLambdaRole
+        - Ref: ChimeSdkListTagsForMeetingLambdaRole
   ChimeMessagingAccessPolicy:
     Type: AWS::IAM::Policy
     Condition: ShouldDeployFetchCredentialLambda
@@ -219,6 +224,57 @@ Resources:
           Type: Api
           Properties:
             Path: /stereo_audio_file
+            Method: GET
+  ChimeSdkTagMeetingLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.tagMeeting
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Meetings
+      Environment:
+        Variables:
+          USE_EVENT_BRIDGE: !Ref UseEventBridge
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /tagMeeting
+            Method: POST
+  ChimeSdkUnTagMeetingLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.untagMeeting
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Meetings
+      Environment:
+        Variables:
+          USE_EVENT_BRIDGE: !Ref UseEventBridge
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /untagMeeting
+            Method: POST
+  ChimeSdkListTagsForMeetingLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.listTagsForMeeting
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Meetings
+      Environment:
+        Variables:
+          USE_EVENT_BRIDGE: !Ref UseEventBridge
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /listTagsForMeeting
             Method: GET
   ChimeSdkJoinLambda:
     Type: AWS::Serverless::Function

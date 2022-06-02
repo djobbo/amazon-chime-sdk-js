@@ -31,6 +31,10 @@
         <label for="inputName" class="sr-only">Your Name</label>
         <input type="name" id="inputName" class="form-control" placeholder="Your Name" required>
       </div>
+      <div class="row mt-3">
+        <label for="inputTags" class="sr-only">Tags</label>
+        <input type="name" id="inputTags" class="form-control" placeholder="Tags">
+      </div>
       <div class="row mt-3" title="Used only for meeting creation. Ignored if meeting already exists">
         <label for="inputRegion" class="sr-only"> Media Region</label>
         <select id="inputRegion" class="custom-select" style="width:100%">
@@ -612,6 +616,29 @@
       <div id="roster-message-container" class="d-flex flex-column col-12 col-sm-5 col-md-4 col-lg-3 h-100">
         <div class="bs-component" style="flex: 1 1 auto; overflow-y: auto; height: 50%;">
           <ul id="roster" class="list-group"></ul>
+        </div>
+        <div class="tag-component" style="flex: 1 1 auto; overflow-y: auto; height: 50%;">
+          <label>Tag Resource</label><br>
+          <div class="input-group send-message" style="display:flex;flex:0 0 auto;margin-top:0.2rem">
+            <textarea class="form-control shadow-none" id="add-tags" rows="1" placeholder="Add User Tags" style="display:inline-block; width:100%;
+              resize:none; border-color: rgba(0, 0, 0, 0.125); outline: none; padding-left: 1.4rem"></textarea></br>
+            <button id="btn-tag-resource" class="btn btn-primary btn-outline-warning btn-block" style="margin-top:0.5rem" type="submit">Tag Resource</button>
+          </div>
+        </div>
+        <div class="untag-component" style="flex: 1 1 auto; overflow-y: auto; height: 50%;">
+          <label>UnTag Resource</label><br>
+          <div class="input-group send-message" style="display:flex;flex:0 0 auto;margin-top:0.2rem">
+            <textarea class="form-control shadow-none" id="add-tag-Keys" rows="1" placeholder="Add Tag Keys" style="display:inline-block; width:100%;
+              resize:none; border-color: rgba(0, 0, 0, 0.125); outline: none; padding-left: 1.4rem"></textarea></br>
+            <button id="btn-untag-resource" class="btn btn-primary btn-outline-warning btn-block" style="margin-top:0.5rem" type="submit">Un-Tag Resource</button>
+          </div>
+        </div>
+        <div class="listTags-component" style="flex: 1 1 auto; overflow-y: auto; height: 50%;">
+          <label>List Tags for Meetings</label><br>
+          <div class="input-group send-message" style="display:flex;flex:0 0 auto;margin-top:0.2rem">
+            <button id="btn-getTags" class="btn btn-primary btn-block" type="submit">Get Tags</button>
+            <div id="chime-meeting-tags" class="text-muted"></div>
+          </div>
         </div>
         <div class="message d-flex flex-column pt-3" style="flex: 1 1 auto; overflow: hidden; height: 50%;">
           <div class="list-group receive-message" id="receive-message" style="flex: 1 1 auto; overflow-y: auto;
