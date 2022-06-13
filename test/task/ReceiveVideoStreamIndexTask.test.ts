@@ -734,6 +734,23 @@ describe('ReceiveVideoStreamIndexTask', () => {
         webSocketAdapter.send(
           createIndexSignalBuffer(false, null, null, [
             SdkVideoCodecCapability.H264_CONSTRAINED_BASELINE_PROFILE,
+            3239 as SdkVideoCodecCapability, // Add garbage signaling
+          ])
+        );
+        await delay(behavior.asyncWaitMs + 10);
+        expect(context.meetingSupportedVideoSendCodecPreferences).to.equal(undefined);
+        done();
+      });
+
+      task.run();
+    });
+
+    it('does not set intersection state if there is no send codec preferences', done => {
+      context.videoSendCodecPreferences = undefined;
+      new TimeoutScheduler(behavior.asyncWaitMs).start(async () => {
+        webSocketAdapter.send(
+          createIndexSignalBuffer(false, null, null, [
+            SdkVideoCodecCapability.H264_CONSTRAINED_BASELINE_PROFILE,
           ])
         );
         await delay(behavior.asyncWaitMs + 10);

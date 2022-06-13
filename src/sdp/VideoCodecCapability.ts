@@ -19,6 +19,7 @@ export default class VideoCodecCapability implements Eq {
 
   equals(other: this): boolean {
     return (
+      other !== undefined &&
       this.codecName === other.codecName &&
       this.codecCapability.mimeType === other.codecCapability.mimeType &&
       this.codecCapability.clockRate === other.codecCapability.clockRate &&
@@ -57,12 +58,14 @@ export default class VideoCodecCapability implements Eq {
   /**
    * Returns the configuration of codec corresponding to the signaled capability
    */
-  static fromSignaled(capability: SdkVideoCodecCapability): VideoCodecCapability {
+  static fromSignaled(capability: SdkVideoCodecCapability): VideoCodecCapability | undefined {
     switch (capability) {
       case SdkVideoCodecCapability.VP8:
         return this.vp8();
       case SdkVideoCodecCapability.H264_CONSTRAINED_BASELINE_PROFILE:
         return this.h264ConstrainedBaselineProfile();
+      default:
+        return undefined;
     }
   }
 }
